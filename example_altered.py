@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from deltanet import DeltaBlock
+from deltanet_altered import DeltaBlock
 
 # ... (Keep text_to_tensor, tensor_to_text, tensor_to_char, char_to_tensor, generated as they are) ...
 
