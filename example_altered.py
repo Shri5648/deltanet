@@ -103,7 +103,7 @@ for epoch in range(num_epoch):
     
     optimizer.step()
     
-    if epoch % 50 == 0:
+    if epoch % 10 == 0:
         print(f"epoch:{epoch}/{num_epoch}, loss:{loss.item():.6f}")
 
 print("\nFinal generated text:")
