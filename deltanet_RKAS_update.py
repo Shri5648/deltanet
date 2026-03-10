@@ -58,7 +58,7 @@ def delta_rule_recurrent_step(q_t, k_t, v_t, S_prev, r_prev=None, A_gram_col=Non
     
     if A_gram_col is None:
         # Fallback if Gram info isn't provided: assume A*A^T is identity-like
-        A_gram_col = k_t 
+        A_gram_col = torch.outer(k_t, k_t) #..................
         
     if r_prev is None:
         # Initial residual r^0 = Ax^0 - b = -v_t (since x^0=0)
