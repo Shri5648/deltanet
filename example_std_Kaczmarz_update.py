@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from deltanet_altered import DeltaBlock
+from deltanet_std_Kaczmarz_update import DeltaBlock
 
 """
     this is an example on how to use the architecture. It's byte per byte text generation, it uses a dumb model without mlp bloc, it's capacity limited
