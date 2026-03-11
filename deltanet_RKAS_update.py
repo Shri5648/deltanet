@@ -57,8 +57,8 @@ def delta_rule_recurrent_step(q_t, k_t, v_t, S_prev, r_prev=None, A_gram_col=Non
     # r_prev is the residual vector r^k
     
     if A_gram_col is None:
-        # Fallback if Gram info isn't provided: assume A*A^T is identity-like
-        A_gram_col = torch.outer(k_t, k_t) #..................
+        # Compute (k_t^Tk_t}
+        kt_dot_pdt = torch.dot(k_t,k_t) 
         
     if r_prev is None:
         # Initial residual r^0 = Ax^0 - b = -v_t (since x^0=0)
@@ -66,18 +66,15 @@ def delta_rule_recurrent_step(q_t, k_t, v_t, S_prev, r_prev=None, A_gram_col=Non
 
     # Step 2: Compute alpha_k = <AA_ik^T, r^k> / ||AA_ik^T||^2
     # We treat each dimension of the residual matrix separately
-    num = torch.sum(A_gram_col * r_prev)
-    den = torch.sum(A_gram_col**2) + 1e-6
-    alpha_k = num / den
+    alpha_k = (kt_dot_pdt)/(kt_dot_pdt^2+ 1e-6) * r_prev    
 
     # Step 3: Update state (x^{k+1} = x^k - alpha_k * A_ik^T)
     # We use an outer product here because S is a matrix mapping k -> v
-    # This corresponds to: S_new = S_prev - alpha_k * outer(1, k_t)
     # Adjusted for the multi-dimensional case:
-    S_new = S_prev - alpha_k * torch.outer(torch.ones_like(v_t), k_t)
+    S_new = S_prev - alpha_k * (k_t.T)
     
     # Step 3: Update residual (r^{k+1} = r^k - alpha_k * AA_ik^T)
-    r_new = r_prev - alpha_k * A_gram_col
+    r_new = r_prev - alpha_k * kt_dot_pdt
     
     # Compute output
     o_t = S_new @ q_t
