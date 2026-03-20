@@ -59,6 +59,10 @@ def delta_rule_recurrent_step(q_t, k_t, v_t, beta_t, S_prev):
         o_t: Output vector at time step t, shape (d,).
         S_new: Updated hidden state (memory matrix), shape (d, d).
     """
+    numerator = torch.mm(k_t.t(), k_t)  # Result: (1, 1)
+    denominator = torch.linalg.norm(numerator, ord=2)**2
+    beta_t = numerator / denominator
+    
     # Compute old value
     v_old_t = S_prev @ k_t  # Shape (d,)
     
