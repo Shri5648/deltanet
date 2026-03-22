@@ -89,7 +89,6 @@ class DeltaBlock(nn.Module):
 
         self.proj_out = nn.Linear(d*expand,d)
 
-        self.beta = nn.Linear(d,1)
         self.sigma = nn.Sigmoid()
         self.alpha = 2 if neg_eigen else 1
 
@@ -102,8 +101,12 @@ class DeltaBlock(nn.Module):
             output: Y of shape B,L,d
         """
         if chunk ==1:
-            _,chunk,_ = X.shape        
-        return self.proj_out(chunk_batched_delta_rule_forward(self.Wq(X),self.Wk(X),self.Wv(X)/self.alpha,self.alpha*self.sigma(self.beta(X)),chunk))
+            _,chunk,_ = X.shape 
+            
+        K_t = self.Wk(X)
+        num = (K_t * K_t).sum(dim=-1, keepdim=True)
+        beta_tensor = num / (torch.linalg.norm(num, dim=-1, keepdim=True)**2 + 1e-6)
+        return self.proj_out(chunk_batched_delta_rule_forward(self.Wq(X),K_t,self.Wv(X)/self.alpha,self.alpha*self.sigma(beta_tensor),chunk))
 
     def step(self,X,S=None):
         """
@@ -117,5 +120,9 @@ class DeltaBlock(nn.Module):
         """
         if S==None:
             S = torch.zeros(self.d*self.expand,self.d*self.expand)
-        y,S = delta_rule_recurrent_step(self.Wq(X),self.Wk(X),self.Wv(X)/self.alpha,self.alpha*self.sigma(self.beta(X)),S)
+
+        K_t = self.Wk(X)
+        num = (K_t * K_t).sum(dim=-1, keepdim=True)
+        beta_tensor = num / (torch.linalg.norm(num, dim=-1, keepdim=True)**2 + 1e-6)
+        y,S = delta_rule_recurrent_step(self.Wq(X),K_t,self.Wv(X)/self.alpha,self.alpha*self.sigma(beta_tensor),S)
         return self.proj_out(y), S
