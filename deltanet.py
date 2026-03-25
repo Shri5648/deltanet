@@ -13,7 +13,9 @@ def chunk_batched_delta_rule_forward(Q,K,V,beta,C):
     K_beta = K*beta.unsqueeze(-1)
     V_beta = V*beta.unsqueeze(-1)
 
-    mask = torch.triu(torch.ones(C,C), diagonal=0).bool()
+    mask = torch.triu(
+        torch.ones(C, C, device=Q.device, dtype=torch.bool), diagonal=0
+    )
 
     K_t = torch.transpose(K,2,3)
     T = -(K_beta[:] @ K_t[:]).masked_fill(mask,0)
@@ -24,14 +26,16 @@ def chunk_batched_delta_rule_forward(Q,K,V,beta,C):
             T_new = T.clone()
             T_new[:,k,i,:i] = T[:,k,i,:i] + (T[:,k,i,:,None]*T[:,k,:,:i]).sum(-2)
             T = T_new
-        T[:,k] = T[:,k] + torch.eye(C)
-
+         T[:,k] = T[:,k] + torch.eye(C, device=T.device, dtype=T.dtype)
+        
     W = T @ K_beta
     U = T @ V_beta
 
-    S = torch.zeros((B,d,d))
+    S = torch.zeros((B, d, d), device=Q.device, dtype=Q.dtype)
     O = torch.empty_like(V)
-    mask = torch.triu(torch.ones(C,C), diagonal=1).bool()
+    mask = torch.triu(
+        torch.ones(C, C, device=Q.device, dtype=torch.bool), diagonal=1
+    )
 
     for i in range(L//C):
         q_i, k_i, w_i = Q[:,i], K[:,i], W[:,i]
@@ -115,7 +119,12 @@ class DeltaBlock(nn.Module):
                 Y vector of shape d
                 S new state of shape (d,d)
         """
-        if S==None:
-            S = torch.zeros(self.d*self.expand,self.d*self.expand)
+        if S is None:
+            S = torch.zeros(
+                self.d * self.expand,
+                self.d * self.expand,
+                device=X.device,
+                dtype=X.dtype,
+            )
         y,S = delta_rule_recurrent_step(self.Wq(X),self.Wk(X),self.Wv(X)/self.alpha,self.alpha*self.sigma(self.beta(X)),S)
         return self.proj_out(y), S
