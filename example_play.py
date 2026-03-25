@@ -4,8 +4,8 @@ import torch.optim as optim
 
 from torch.utils.data import DataLoader, Dataset
 
-# from deltanet import DeltaBlock
-from Kaczmarz_one_step_Slimpajama import DeltaBlock
+from deltanet import DeltaBlock
+#from Kaczmarz_one_step_Slimpajama import DeltaBlock
 from slimpajama_data import build_slimpajama_byte_splits, load_memmap_splits
  
 """
