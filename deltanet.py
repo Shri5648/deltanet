@@ -26,7 +26,7 @@ def chunk_batched_delta_rule_forward(Q,K,V,beta,C):
             T_new = T.clone()
             T_new[:,k,i,:i] = T[:,k,i,:i] + (T[:,k,i,:,None]*T[:,k,:,:i]).sum(-2)
             T = T_new
-         T[:,k] = T[:,k] + torch.eye(C, device=T.device, dtype=T.dtype)
+        T[:,k] = T[:,k] + torch.eye(C, device=T.device, dtype=T.dtype)
         
     W = T @ K_beta
     U = T @ V_beta
