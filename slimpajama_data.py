@@ -25,6 +25,12 @@ def _open_stream(
         {"path": dataset_name, "name": None},
         {"path": dataset_name, "name": "default"},
     ]
+    # Fallback mirror that contains the same SlimPajama content split by source.
+    if dataset_name == "cerebras/SlimPajama-627B":
+        attempts.extend([
+            {"path": "MBZUAI-LLM/SlimPajama-627B-DC", "name": None},
+            {"path": "MBZUAI-LLM/SlimPajama-627B-DC", "name": "default"},
+        ])
 
     last_error = None
     for attempt in attempts:
@@ -45,8 +51,10 @@ def _open_stream(
         "Tried dataset ids/configs: "
         f"{[(a['path'], a['name']) for a in attempts]}. "
         "If this dataset exists but still fails, upgrade dependencies and retry: "
-        "`pip install -U datasets huggingface_hub hf-xet`, then optionally run "
-        "`huggingface-cli login` and set `HF_TOKEN` if your environment requires auth."
+        "`pip install -U datasets huggingface_hub hf-xet`. "
+        "If auth is required, install CLI support with "
+        "`pip install -U \"huggingface_hub[cli]\"` and run `hf auth login`, "
+        "or directly export `HF_TOKEN`."
     ) from last_error
 
 
