@@ -1,17 +1,17 @@
- import torch
- import torch.nn as nn
+import torch
+import torch.nn as nn
  
- def chunk_batched_delta_rule_forward(Q,K,V,beta,C):
+def chunk_batched_delta_rule_forward(Q,K,V,beta,C):
      """
          Q,K and V are of shape (B,L,d) where B is the batch, L the sequence length and d the embeding's dimension
          beta is of shape (B,L,1)
          C is the size of the chunk, it should divide L
      """
-     B,L,d = Q.shape
-     Q, K, V= map(lambda x: x.reshape(B,-1,C,d), [Q,K,V])
-     beta = beta.reshape(B,-1,C)
-     K_beta = K*beta.unsqueeze(-1)
-     V_beta = V*beta.unsqueeze(-1)
+    B,L,d = Q.shape
+    Q, K, V= map(lambda x: x.reshape(B,-1,C,d), [Q,K,V])
+    beta = beta.reshape(B,-1,C)
+    K_beta = K*beta.unsqueeze(-1)
+    V_beta = V*beta.unsqueeze(-1)
  
 
     mask = torch.triu(
@@ -34,12 +34,12 @@
      U = T @ V_beta
  
 
-    S = torch.zeros((B, d, d), device=Q.device, dtype=Q.dtype)
+     S = torch.zeros((B, d, d), device=Q.device, dtype=Q.dtype)
      O = torch.empty_like(V)
 
-    mask = torch.triu(
+     mask = torch.triu(
         torch.ones(C, C, device=Q.device, dtype=torch.bool), diagonal=1
-    )
+     )
  
      for i in range(L//C):
          q_i, k_i, w_i = Q[:,i], K[:,i], W[:,i]
@@ -65,8 +65,7 @@
          
      Returns:
          o_t: Output vector at time step t, shape (d,).
-@@ -96,33 +100,38 @@ class DeltaBlock(nn.Module):
-         """
+     
              this is the chunkwise form of deltanet
              input: 
                  X of shape B,L,d
@@ -92,7 +91,7 @@
                  S new state of shape (d,d)
          """
 
-        if S is None:
+         if S is None:
             S = torch.zeros(
                 self.d * self.expand,
                 self.d * self.expand,
