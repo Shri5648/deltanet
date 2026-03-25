@@ -33,6 +33,7 @@ def _open_stream(
         ])
 
     last_error = None
+    zstd_error = None
     for attempt in attempts:
         try:
             stream = load_dataset(
@@ -45,6 +46,19 @@ def _open_stream(
             return stream.shuffle(seed=seed, buffer_size=shuffle_buffer_size)
         except (DatasetNotFoundError, RepositoryNotFoundError, FileNotFoundError) as exc:
             last_error = exc
+        except ValueError as exc:
+            if "Compression type zstd not supported" in str(exc):
+                zstd_error = exc
+                last_error = exc
+                continue
+            raise
+
+    if zstd_error is not None:
+        raise RuntimeError(
+            "Your environment is missing zstd support required by SlimPajama files. "
+            "Install it with `pip install zstandard` and rerun. "
+            "If you still see issues, also upgrade `datasets` and `fsspec`."
+        ) from zstd_error
 
     raise RuntimeError(
         "Could not open SlimPajama from Hugging Face. "
