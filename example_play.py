@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-#from deltanet import DeltaBlock
+
 from torch.utils.data import DataLoader, Dataset
 
 # from deltanet import DeltaBlock
-from Kaczmarz_one_step_Slimpajama import DeltaBlock
+from deltanet_Kaczmarz_one_step import DeltaBlock
 from slimpajama_data import build_slimpajama_byte_splits, load_memmap_splits
  
 """
+-    this is an example on how to use the architecture. It's byte per byte text generation, it uses a dumb model without mlp bloc, it's capacity limited
 +Byte-level next-token training example for DeltaBlock.
 +
 +This script:
@@ -19,29 +20,31 @@ from slimpajama_data import build_slimpajama_byte_splits, load_memmap_splits
  """
  
 def tensor_to_char(tensor):
-     index = torch.argmax(tensor)
-     return chr(index)
+    index = torch.argmax(tensor).item()
+    return chr(index)
  
-
-def char_to_tensor(char):
-    tensor = torch.zeros(256)
+def char_to_tensor(char, device):
+    tensor = torch.zeros(256, device=device)
     tensor[ord(char)] = 1.0
     return tensor
  
 
 def generated(tensor):
-     new_tensor = torch.zeros(256)
-     index = torch.argmax(tensor)
-     new_tensor[index] = 1.0
-     return new_tensor
+    new_tensor = torch.zeros(256, device=tensor.device, dtype=tensor.dtype)
+    index = torch.argmax(tensor)
+    new_tensor[index] = 1.0
+    return new_tensor
  
+
+
 def generate(model, prompt, seq_len=128):
     model.eval()
+    device = next(model.parameters()).device
     S = None
 
     with torch.no_grad():
         for c in prompt:
-            x = char_to_tensor(c)
+            x = char_to_tensor(c, device=device)
             x, S = model.step(x, S)
             print(c, end="")
             x = x.squeeze(0).squeeze(0)
